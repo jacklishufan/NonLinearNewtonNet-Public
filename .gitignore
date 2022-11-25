@@ -5,11 +5,13 @@ __pycache__/
 
 # C extensions
 *.so
-
+local
 # pycharm files
 .idea/**
 **/.idea/
 .idea/
+scripts/wandb
+scripts/local
 
 # Distribution / packaging
 .Python

@@ -146,14 +146,15 @@ class NewtonNet(nn.Module):
 
         self.atomic_properties_only = atomic_properties_only
         self.aggregration = aggregration
+        self.device = device
 
     def forward(self, data):
-
-        Z = data['Z']
-        R = data['R']
-        N = data['N']
-        NM = data['NM']
-        AM = data['AM']
+        device = self.embedding.weight.device
+        Z = data['Z'].to(device)
+        R = data['R'].to(device)
+        N = data['N'].to(device)
+        NM = data['NM'].to(device)
+        AM = data['AM'].to(device)
         if "lattice" in data:
             lattice = data['lattice']
         else:
@@ -176,8 +177,8 @@ class NewtonNet(nn.Module):
 
         # compute distances (B,A,N) and distance vectors (B,A,N,3)
         if 'D' in data:
-            distances = data['D']
-            distance_vector = data['V']
+            distances = data['D'].to(device)
+            distance_vector = data['V'].to(device)
         else:
             distances, distance_vector, N, NM = self.shell(R, N, NM, lattice)
 

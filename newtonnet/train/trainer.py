@@ -11,7 +11,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
 from torch import nn
 from newtonnet.utils.utility import standardize_batch
 from itertools import chain
-
+import wandb
 
 class Trainer:
     """
@@ -121,7 +121,6 @@ class Trainer:
             raise NotImplemented('scheduler "%s" is not implemented yet.'%lr_scheduler[0])
 
     def _subdirs(self, yml_path, output_path, script_name):
-
         # create output directory and subdirectories
         path_iter = output_path[1]
         out_path = os.path.join(output_path[0], 'training_%i'%path_iter)
@@ -152,7 +151,7 @@ class Trainer:
     def _hooks(self, hooks):
         hooks_list = []
         if 'vismolvector3d' in hooks and hooks['vismolvector3d']:
-            from combust.train.hooks import VizMolVectors3D
+            from newtonnet.train.hooks import VizMolVectors3D
 
             vis = VizMolVectors3D()
             vis.set_output(True, None)
@@ -209,7 +208,11 @@ class Trainer:
         for k in input:
             self.log_loss[k].append(input[k])
 
-
+        wandb.log(dict(
+            epoch=self.epoch,
+            steps=steps,
+            **input
+        ))
         df = pd.DataFrame(self.log_loss)
         df.applymap('{:.5f}'.format).to_csv(os.path.join(
             self.output_path, 'log.csv'),
