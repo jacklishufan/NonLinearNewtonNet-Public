@@ -283,9 +283,9 @@ class NonLinearAttention(nn.Module):
         v = self.v(torch.cat([b,rbf_msij],dim=-1)) # n x a x nf
         atten = torch.einsum('naf,nabf->nab',q,k)
         mask_inf = torch.zeros_like(mask,device=mask.device).float()
-        mask_inf[mask==0] = float('-inf')
+        mask_inf[mask==0] = -1e5
         if mask is not None:
-            atten = atten - mask_inf
+            atten = atten + mask_inf
         atten = F.softmax(atten,dim=-1)
         out = torch.einsum('nab,nabf->naf',atten,v)
         return a + out

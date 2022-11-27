@@ -69,6 +69,7 @@ w_f_dir = settings['model']['w_f_dir']
 def custom_loss(preds, batch_data, w_e=w_energy, w_f=w_force, w_fm=w_f_mag, w_fd=w_f_dir):
 
     # compute the mean squared error on the energies
+   
     diff_energy = preds['E'] - batch_data["E"]
     assert diff_energy.shape[1] == 1
     err_sq_energy = torch.mean(diff_energy**2)

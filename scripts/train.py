@@ -145,7 +145,6 @@ w_f_mag = settings['model']['w_f_mag']
 w_f_dir = settings['model']['w_f_dir']
 
 def custom_loss(preds, batch_data, w_e=w_energy, w_f=w_force, w_fm=w_f_mag, w_fd=w_f_dir):
-
     # compute the mean squared error on the energies
     device = preds['E'].device
     diff_energy = preds['E'] - batch_data["E"].reshape(-1,1).to(device)
