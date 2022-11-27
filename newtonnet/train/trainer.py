@@ -640,7 +640,7 @@ class Trainer:
             if self.mode in ["energy/force", "energy"]:
                 val_mae_E = val_mae_F = 0
                 if val_generator is not None and \
-                    self.epoch % self.check_val == 0:
+                    self.epoch % self.check_val == 0 or self.epoch < 5: # always log first epochs for sanity check
 
                     outputs = self.validation('valid', val_generator, val_steps)
                     if self.requires_dr:

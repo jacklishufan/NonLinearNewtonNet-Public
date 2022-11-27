@@ -27,7 +27,7 @@ model:
   max_z: 10                   # maximum atomic number in the chemical systems
   n_interactions: 3           # number of interaction blocks of newtonnet
   cutoff_network: poly        # the cutoff function: poly (polynomial), cosine
-  normalize_atomic: False     # if True the atomic energy needs to be inverse normalized, otherwise total energy will be scaled back
+  normalize_atomic: True     # if True the atomic energy needs to be inverse normalized, otherwise total energy will be scaled back
   shared_interactions: False  # if True parameters of interaction blocks will be shared.
   normalize_filter: False     #
   return_latent: True         # if True, the latent space will be returned for the future investigation
@@ -48,7 +48,7 @@ training:
   val_keep_original: True     #
   shuffle: True               # shuffle training data before each epoch
   drop_last: True             # if True, drop the left over data points that are less than a full batch size
-  lr: 1.0e-3                  # learning rate
+  lr: 1.0e-4                  # learning rate
   lr_scheduler: [plateau, 15, 30, 0.7, 1.0e-6]    # the learning rate decay based on the plateau algorithm: n_epoch_averaging, patience, decay_rate, stop_lr
 #  lr_scheduler: [decay, 0.05]                    # the learning rate decay based on exponential decay: the rate of decay
   weight_decay: 0             # the l2 norm
