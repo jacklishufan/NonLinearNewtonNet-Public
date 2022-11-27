@@ -79,7 +79,7 @@ elif parser in ['ani']:
     print('data set:', 'ANI')
 elif parser in ['ani_ccx']:
     train_gen, val_gen, test_gen, tr_steps, val_steps, test_steps, n_train_data, n_val_data, n_test_data, normalizer, test_energy_hash = parse_ani_ccx_data(
-        settings, data_keys, 'cpu')
+        settings, data_keys,  device[0])
     train_mode = 'energy'
     print('data set:', 'ANI_CCX')
 elif parser in ['methane']:
@@ -115,7 +115,8 @@ model = NewtonNet(resolution=settings['model']['resolution'],
                shared_interactions=settings['model']['shared_interactions'],
                return_latent=settings['model']['return_latent'],
                double_update_latent=settings['model']['double_update_latent'],
-               layer_norm=settings['model']['layer_norm']
+               layer_norm=settings['model']['layer_norm'],
+               nonlinear_attention=settings['model']['nonlinear_attention'],
                )
 
 # laod pre-trained model
