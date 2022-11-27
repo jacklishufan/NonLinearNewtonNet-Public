@@ -122,3 +122,72 @@ class anidataloader(object):
     def cleanup(self):
         self.store.close()
 
+
+class DataLoaderAniccx(object):
+
+    ''' Contructor '''
+    def __init__(self, store_file, keys):
+        if not os.path.exists(store_file):
+            exit('Error: file not found - '+store_file)
+        self.store = h5py.File(store_file)
+        self.file_name = store_file
+        if keys == "original": # Original ANI-1x data
+            self.keys = ['wb97x_dz.energy','wb97x_dz.forces']
+        elif keys == "CHNO": # CHNO portion of the data set used in AIM-Net
+            self.keys = ['wb97x_tz.energy','wb97x_tz.forces']
+        elif keys == "ccsd": # The coupled cluster ANI-1ccx data set
+            self.keys = ['ccsd(t)_cbs.energy']
+        elif keys == "dipole": # A subset of this data was used for training the ACA charge model
+            self.keys == ['wb97x_dz.dipoles']
+        else:
+            print("Error: No matching keys. Check github readme for help.")
+
+    def iter_data_buckets(self, h5filename):
+        """ Iterate over buckets of data in ANI HDF5 file. 
+        Yields dicts with atomic numbers (shape [Na,]) coordinated (shape [Nc, Na, 3])
+        and other available properties specified by `keys` list, w/o NaN values.
+        """
+        keys = set(self.keys)
+        keys.discard('atomic_numbers')
+        keys.discard('coordinates')
+        with h5py.File(h5filename, 'r') as f:
+            for grp in f.values():
+                Nc = grp['coordinates'].shape[0]
+                mask = np.ones(Nc, dtype=np.bool)
+                data = dict((k, grp[k][()]) for k in keys)
+                for k in keys:
+                    v = data[k].reshape(Nc, -1)
+                    mask = mask & ~np.isnan(v).any(axis=1)
+                if not np.sum(mask):
+                    continue
+                d = dict((k, data[k][mask]) for k in keys)
+                d['atomic_numbers'] = grp['atomic_numbers'][()]
+                d['coordinates'] = grp['coordinates'][()][mask]
+                yield d 
+
+
+    ''' Default class iterator (iterate through all data) '''
+    def __iter__(self):
+        # for data in self.h5py_dataset_iterator(self.store):
+        #     yield data
+        #print("working new iter")
+        for data in self.iter_data_buckets(self.file_name):
+            yield data
+
+    ''' Returns the avaliable energy type '''
+    def get_energy_type(self):
+        return self.keys[0]
+
+    ''' Returns the number of groups '''
+    def group_size(self):
+        return len(self.get_group_list())
+
+    def size(self):
+        count = 0
+        for g in self.store.values():
+            count = count + len(g.items())
+        return count
+
+    ''' Close the HDF5 file '''
+    def cleanup(self):
+        self.store.close()
