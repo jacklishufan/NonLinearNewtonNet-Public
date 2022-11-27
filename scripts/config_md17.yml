@@ -5,22 +5,14 @@ general:
   output: [local/ccsd/test , 1]                 # path and iterator for the output directory
 
 data:
-  root: C:\Users\Pumpkinfries\Desktop\Fa 22\CS 182\project\ani1_ccx
-  train: 
-          - 1
-          - 2
-          - 3
-          - 4
-          - 5
-          - 6
-          - 7
-          - 8 # path to the training data
-  test:  off   # path to the test data   
+  train_path: C:\Users\Pumpkinfries\Desktop\Fa 22\CS 182\project
+  test_path: C:\Users\Pumpkinfries\Desktop\12672038\rmd17\npz_data
+  test_method: "all" # other options are 'out' and 'in', corresponding to in-distribution and out-distribution
   test_size_per_molecule: 0.25
   subtract_self_energy: on 
   cutoff: 5.0                 # cutoff radius
-  train_size_proportion: 0.8             # training set size: to sample randomly
-  val_size_proportion: 0.1                # validation set size: to sample randomly
+  train_size_proportion: 0.1             # training set size: to sample randomly
+  val_size_proportion: 0.25                # validation set size: to sample randomly
   test_size: 1000             # test set size: to sample randomly
   random_states: 90           # random seed for data splitting
   train_val_split_random_state: 0
@@ -50,9 +42,9 @@ model:
                               # Options are: sum, mean, max
 
 training:
-  epochs: 100                # number of times the entire training data will be shown to the model
-  tr_batch_size: 256           # number of training points (snapshots) in a batch of data that is feed to the model
-  val_batch_size: 12          # number of validation points (snapshots) in a batch of data that is feed to the model
+  epochs: 3                # number of times the entire training data will be shown to the model
+  tr_batch_size: 4           # number of training points (snapshots) in a batch of data that is feed to the model
+  val_batch_size: 4          # number of validation points (snapshots) in a batch of data that is feed to the model
   tr_rotations: 0             # number of times the training data needs to be randomly rotated (redundant for NewtonNet model)
   val_rotations: 0            # number of times the validation data needs to be randomly rotated (redundant for NewtonNet model)
   tr_frz_rot: False           # if True, fixed rotations matrix will be used at each epoch

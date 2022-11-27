@@ -14,7 +14,7 @@ from newtonnet.layers.activations import get_activation_by_string
 from newtonnet.models import NewtonNet
 
 from newtonnet.train import Trainer
-from newtonnet.data import parse_train_test, parse_ani_data, parse_methane_data, parse_ani_ccx_data
+from newtonnet.data import *
 
 import wandb
 
@@ -68,7 +68,8 @@ else:
     device = [torch.device(settings['general']['device'])]
 
 # data
-if parser in ['md17', 'ccsd']:
+# modify to use our md17 parser
+if parser in ['ccsd']:
     train_gen, val_gen, test_gen, tr_steps, val_steps, test_steps, normalizer = parse_train_test(settings,device[0])
     train_mode = 'energy/force'
     print('data set:', 'one of md17 data sets or a generic one.')
@@ -82,6 +83,11 @@ elif parser in ['ani_ccx']:
         settings, data_keys, 'cpu')
     train_mode = 'energy'
     print('data set:', 'ANI_CCX')
+elif parser in ['md17']:
+    train_gen, val_gen, test_gen, tr_steps, val_steps, test_steps, n_train_data, n_val_data, n_test_data, normalizer, test_energy_hash = parse_md17_data(
+        settings, data_keys, 'cpu')
+    train_mode = 'energy'
+    print('data set:', 'MD17 for Test and Ani-cxx for Train')
 elif parser in ['methane']:
     train_gen, val_gen, test_gen, tr_steps, val_steps, test_steps, n_train_data, n_val_data, n_test_data, normalizer, test_energy_hash = parse_methane_data(
         settings, device[0])

@@ -901,6 +901,190 @@ def parse_ani_ccx_data(settings, data_keys, device):
     return train_gen, val_gen, test_gen, tr_steps, val_steps, test_steps, n_tr_data, n_val_data, n_test_data, normalizer, test_energy_hash
 
 
+def parse_md17_data(settings, data_keys, device):
+    """
+    parse and load the revised MD17 dataset with splitting of train, validation and test
+    dataset is expected to be in original .h5 format
+    https://github.com/aiqm/ANI1x_datasets
+    energy units: Hartree (convert_unit=False), or kcal/mol (convert_unit=True)
+
+    Parameters
+    ----------
+    settings: instance of yaml file
+    device: list
+        list of torch devices
+
+    Returns
+    -------
+    generator: train, val, test generators, respectively
+    int: n_steps for train, val, test, respectively
+    tuple: tuple of mean and standard deviation of energies in the training data
+
+    """
+    # atomic_Z_map = {'C': 6, 'H': 1, 'O': 8, 'N': 7}
+    # atomic_self_energy = {'H': -0.60467592, 'C': -38.06846167, 'N': -54.70613008, 'O': -75.1796043 } # calculated from dataset
+    atomic_self_energy = {1: -0.499946, 6: -37.786540, 7: -54.524824, 8: -74.993565 } # provided by Jiashu
+    
+    dtrain = {'R':[], 'Z':[], 'N':[], 'E':[]}
+    dtest = {'R':[], 'Z':[], 'N':[], 'E':[]}
+
+    # Training Set via Ani-CXX
+    training = settings['data']['train_path']
+
+    print("data_keys: ", data_keys)
+
+    ani_data = DataLoaderAniccx(training + "/ani1x-release.h5", data_keys)
+    energy_type = ani_data.get_energy_type()
+    print("Going through this file of Ani CXX Data (Training): ", ani_data)
+
+    for molecule in ani_data:
+        # prepare self energy of the current molecule for subtraction from total energy
+        if settings['data']['subtract_self_energy']:
+            self_energy = np.sum([atomic_self_energy[a] for a in molecule['atomic_numbers']])
+            molecule[energy_type] -= self_energy
+        if settings['data'].get('convert_unit', True):
+            # convert Hartree units to kCal/mol
+            molecule[energy_type] *= 627.2396
+        n_conf, n_atoms, _ = molecule['coordinates'].shape
+        conf_indices = np.arange(n_conf)
+
+        # All Ani_ccx is used as training set since we have md17 as testing set
+        train_idx = conf_indices
+        n_conf_train = len(train_idx)
+        dtrain['R'].extend(molecule['coordinates'][train_idx])
+        dtrain['Z'].extend(np.tile([a for a in molecule['atomic_numbers']], (n_conf_train, 1)))
+        dtrain['N'].extend([n_atoms] * n_conf_train)
+        dtrain['E'].extend(molecule[energy_type][train_idx])
+
+    #Test data
+    #Sample 1000 from each molecule
+
+    md17_data = settings['data']['test_path']
+    test_method = settings['data']['test_method']
+    molecule_dict_all = ['rmd17_aspirin', 'rmd17_azobenzene', 'rmd17_benzene', 'rmd17_ethanol'
+        'rmd17_malonaldehyde', 'rmd17_naphthalene', 'rmd17_paracetamol', 'rmd17_salicylic',
+        'rmd17_toluene', 'rmd17_uracil']
+    molecule_dict_in = ['rmd17_benzene', 'rmd17_ethanol', 'rmd17_malonaldehyde', 'rmd17_toluene', 'rmd17_uracil']
+    molecule_dict_out = ['rmd17_aspirin', 'rmd17_azobenzene', 'rmd17_naphthalene', 'rmd17_paracetamol', 'rmd17_salicylic']
+
+    molecule_dict_in_use = molecule_dict_all
+
+    if test_method == "in":
+        molecule_dict_in_use = molecule_dict_in
+    elif test_method == "out":
+        molecule_dict_in_use = molecule_dict_out
+
+    print("Going through this file of MD17 Data for Test: ", md17_data)
+
+    for filename in os.listdir(md17_data):
+        if filename.split('.')[0] not in molecule_dict_in_use:
+            continue
+        print("current file being processed: ", filename)
+
+        file_path = os.path.join(md17_data, filename)
+        raw_file = np.load(file_path)
+        molecule = dict()
+        lst = raw_file.files
+        for item in lst:
+            molecule[item] = raw_file[item]
+        
+        n_conf, n_atoms, _ = molecule['coords'].shape
+        conf_indices = np.arange(n_conf)
+
+        _, test_idx = train_test_split(conf_indices, 
+            test_size=1000, 
+            random_state=settings['data']['train_test_split_random_state'])
+
+        n_conf_test = len(test_idx) 
+        dtest['R'].extend(molecule['coords'][test_idx])
+        dtest['Z'].extend(np.tile([a for a in molecule['nuclear_charges']], (n_conf_test, 1)))
+        dtest['N'].extend([n_atoms] * n_conf_test)
+        dtest['E'].extend(molecule['energies'][test_idx])
+
+    # Pad irregular-shaped arrays to make all arrays regular in size
+    # for k in ['R', 'Z', 'N', 'E']:
+    #     dtrain[k] = standardize_batch(dtrain[k])
+    #     dtest[k] = standardize_batch(dtest[k])
+
+    further_split_indices = list(range(len(dtrain['R'])))
+    train_proportion = settings['data']['train_size_proportion']
+    val_proportion = settings['data']['val_size_proportion']
+    total_proportion = train_proportion + val_proportion
+    #print("total_proportion: ", total_proportion)
+    if total_proportion < 1:
+        train_val_indices, unused_indices = train_test_split(further_split_indices, train_size=total_proportion, random_state=settings['data']['train_val_split_random_state'])
+    else:
+        train_val_indices = further_split_indices
+    train_idx, val_idx = train_test_split(train_val_indices, test_size=(val_proportion / total_proportion), random_state=settings['data']['train_val_split_random_state'])
+    data = dtrain
+    dtrain = {}
+    dval = {}
+    for k in data:
+        dtrain[k] = np.array(data[k])[train_idx]
+        dval[k] = np.array(data[k])[val_idx]
+        dtest[k] = np.array(dtest[k])
+
+    # extract data stats
+    normalizer = (dtrain['E'].mean(), dtrain['E'].std())
+
+    n_tr_data = len(dtrain['R'])
+    n_val_data = len(dval['R'])
+    n_test_data = len(dtest['R'])
+    print("data size: (train,val,test): %i, %i, %i"%(n_tr_data,n_val_data,n_test_data))
+
+    # HASH check for test energies to make sure test data is fixed
+    import hashlib
+    test_energy_hash = hashlib.sha1(dtest['E']).hexdigest()
+    print("Test set energy HASH:", test_energy_hash)
+
+    tr_batch_size = settings['training']['tr_batch_size']
+    val_batch_size = settings['training']['val_batch_size']
+    tr_rotations = settings['training']['tr_rotations']
+    val_rotations = settings['training']['val_rotations']
+
+    # generators
+    me = settings['general']['driver']
+
+    # steps
+    tr_steps = int(np.ceil(n_tr_data / tr_batch_size)) * (tr_rotations + 1)
+    val_steps = int(np.ceil(n_val_data / val_batch_size)) * (val_rotations + 1)
+    test_steps= int(np.ceil(n_test_data / val_batch_size)) * (val_rotations + 1)
+
+    env = ExtensiveEnvironment()
+
+    train_gen = extensive_train_loader(data=dtrain,
+                                        env_provider=env,
+                                        batch_size=tr_batch_size,
+                                        n_rotations=tr_rotations,
+                                        freeze_rotations=settings['training']['tr_frz_rot'],
+                                        keep_original=settings['training']['tr_keep_original'],
+                                        device=device,
+                                        shuffle=settings['training']['shuffle'],
+                                        drop_last=settings['training']['drop_last'])
+
+    val_gen = extensive_train_loader(data=dval,
+                                        env_provider=env,
+                                        batch_size=val_batch_size,
+                                        n_rotations=val_rotations,
+                                        freeze_rotations=settings['training']['val_frz_rot'],
+                                        keep_original=settings['training']['val_keep_original'],
+                                        device=device,
+                                        shuffle=settings['training']['shuffle'],
+                                        drop_last=settings['training']['drop_last'])
+
+
+    test_gen = extensive_train_loader(data=dtest,
+                                        env_provider=env,
+                                        batch_size=val_batch_size,
+                                        n_rotations=val_rotations,
+                                        freeze_rotations=settings['training']['val_frz_rot'],
+                                        keep_original=settings['training']['val_keep_original'],
+                                        device=device,
+                                        shuffle=False,
+                                        drop_last=False)
+
+    return train_gen, val_gen, test_gen, tr_steps, val_steps, test_steps, n_tr_data, n_val_data, n_test_data, normalizer, test_energy_hash
+
 
 def parse_train_test(settings, device, unit='kcal'):
     """
