@@ -166,33 +166,6 @@ class DataLoaderAniccx(object):
                 yield d 
 
 
-
-    ''' Group recursive iterator (iterate through all groups in all branches and return datasets in dicts) '''
-    def h5py_dataset_iterator(self,g, prefix=''):
-        for key in g.keys():
-            item = g[key]
-            path = '{}/{}'.format(prefix, key)
-            keys = [i for i in item.keys()]
-            if isinstance(item[keys[0]], h5py.Dataset): # test for dataset
-                data = {'path':path}
-                for k in keys:
-                    if not isinstance(item[k], h5py.Group):
-                        if int(h5py.__version__.split('.')[0]) >= 3: # check h5py version
-                            dataset = item[k][()]
-                        else:
-                            dataset = np.array(item[k].value)
-
-                        if type(dataset) is np.ndarray:
-                            if dataset.size != 0:
-                                if type(dataset[0]) is np.bytes_:
-                                    dataset = [a.decode('ascii') for a in dataset]
-
-                        data.update({k:dataset})
-
-                yield data
-            else: # test for group (go down)
-                yield from self.h5py_dataset_iterator(item, path)
-
     ''' Default class iterator (iterate through all data) '''
     def __iter__(self):
         # for data in self.h5py_dataset_iterator(self.store):
@@ -200,37 +173,6 @@ class DataLoaderAniccx(object):
         #print("working new iter")
         for data in self.iter_data_buckets(self.file_name):
             yield data
-
-    ''' Returns a list of all groups in the file '''
-    def get_group_list(self):
-        return [g for g in self.store.values()]
-
-    ''' Allows interation through the data in a given group '''
-    def iter_group(self,g):
-        for data in self.h5py_dataset_iterator(g):
-            yield data
-
-    ''' Returns the requested dataset '''
-    def get_data(self, path, prefix=''):
-        item = self.store[path]
-        path = '{}/{}'.format(prefix, path)
-        keys = [i for i in item.keys()]
-        data = {'path': path}
-        # print(path)
-        for k in keys:
-            if not isinstance(item[k], h5py.Group):
-                if int(h5py.__version__.split('.')[0]) >= 3: # check h5py version
-                    dataset = item[k][()]
-                else:
-                    dataset = np.array(item[k].value)
-
-                if type(dataset) is np.ndarray:
-                    if dataset.size != 0:
-                        if type(dataset[0]) is np.bytes_:
-                            dataset = [a.decode('ascii') for a in dataset]
-
-                data.update({k: dataset})
-        return data
 
     ''' Returns the avaliable energy type '''
     def get_energy_type(self):
