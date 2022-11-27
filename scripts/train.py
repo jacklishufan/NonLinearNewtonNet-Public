@@ -42,6 +42,14 @@ parser.add_argument(
     help="The name of dataset to select the appropriate parser. We provide data parsers for 'md17', 'ccsd', 'ani', 'hydroggen' and 'methane' data sets."\
          "For all other data sets do not specify.")
 
+parser.add_argument(
+    '-n',
+    "--name",
+    type=str,
+    required=False,
+    default='',
+    help="The name of wandb log name")
+
 
 parser.add_argument(
     '-k',
@@ -98,7 +106,7 @@ print('normalizer: ', normalizer)
 # model
 # activation function
 activation = get_activation_by_string(settings['model']['activation'])
-wandb.init()
+wandb.init(name=args.name or None)
 model = NewtonNet(resolution=settings['model']['resolution'],
                n_features=settings['model']['n_features'],
                activation=activation,

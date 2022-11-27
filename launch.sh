@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 python newtonnet_train.py -c config_aniccx_test.yml -p ani_ccx

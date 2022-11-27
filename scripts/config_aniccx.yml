@@ -61,7 +61,7 @@ training:
   val_keep_original: True     #
   shuffle: True               # shuffle training data before each epoch
   drop_last: True             # if True, drop the left over data points that are less than a full batch size
-  lr: 4.0e-4                  # learning rate
+  lr: 4.0e-5                  # learning rate
   lr_scheduler: [plateau, 15, 30, 0.7, 1.0e-6]    # the learning rate decay based on the plateau algorithm: n_epoch_averaging, patience, decay_rate, stop_lr
 #  lr_scheduler: [decay, 0.05]                    # the learning rate decay based on exponential decay: the rate of decay
   weight_decay: 5.0e-4             # the l2 norm

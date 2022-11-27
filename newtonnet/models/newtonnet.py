@@ -7,7 +7,7 @@ from newtonnet.layers.shells import ShellProvider
 from newtonnet.layers.scalers import ScaleShift, TrainableScaleShift
 from newtonnet.layers.cutoff import CosineCutoff, PolynomialCutoff
 from newtonnet.layers.representations import RadialBesselLayer
-
+import torch.nn.functional as F
 
 class NewtonNet(nn.Module):
     """
@@ -61,7 +61,8 @@ class NewtonNet(nn.Module):
                  atomic_properties_only=False,
                  double_update_latent=True,
                  pbc=False,
-                 aggregration='sum'):
+                 aggregration='sum',
+                 nonlinear_attention=False):
 
         super(NewtonNet, self).__init__()
 
@@ -70,7 +71,7 @@ class NewtonNet(nn.Module):
         self.normalize_atomic = normalize_atomic
         self.return_intermediate = return_latent
         self.pbc = pbc
-
+        self.nonlinear_attention = nonlinear_attention
         shell_cutoff = None
         if pbc:
             # make the cutoff here a little bit larger so that it can be handled with differentiable cutoff layer in interaction block
@@ -97,7 +98,8 @@ class NewtonNet(nn.Module):
                         activation=activation,
                         cutoff=cutoff,
                         cutoff_network=cutoff_network,
-                        double_update_latent=double_update_latent
+                        double_update_latent=double_update_latent,
+                        nonlinear_attention = nonlinear_attention
                     )
                 ]
                 * n_interactions
@@ -112,7 +114,8 @@ class NewtonNet(nn.Module):
                         activation=activation,
                         cutoff=cutoff,
                         cutoff_network=cutoff_network,
-                        double_update_latent=double_update_latent
+                        double_update_latent=double_update_latent,
+                        nonlinear_attention = nonlinear_attention
                     )
                     for _ in range(n_interactions)
                 ]
@@ -247,7 +250,45 @@ class NewtonNet(nn.Module):
             return {'E': E, 'F': dE, 'Ei': Ei, 'hs': hs, 'F_latent': f_dir}
         else:
             return {'E': E, 'F': dE, 'Ei': Ei, 'F_latent': f_dir}
+        
+class MLP(nn.Module):
 
+    def __init__(self,input_dim, hidden_dim,output_dim):
+        super().__init__()
+        self.backbone = nn.Sequential(
+            nn.Linear(input_dim,hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim,output_dim),
+        )
+    
+    def forward(self,x):
+        return self.backbone(x)
+    
+
+class NonLinearAttention(nn.Module):
+
+    def __init__(self,d_model,feature_dim):
+        super().__init__()
+        self.q = MLP(feature_dim,d_model*2,d_model)
+        self.k = MLP(feature_dim,d_model*2,d_model)
+        self.v = MLP(feature_dim*2,feature_dim*2,feature_dim)
+
+    def forward(self,a,b,mask=None,rbf_msij=None):
+        '''
+        a: N X A X nf
+        b: N X A X n(eighbor) X nf
+        '''
+        q = self.q(a)
+        k = self.k(b)
+        v = self.v(torch.cat([b,rbf_msij],dim=-1)) # n x a x nf
+        atten = torch.einsum('naf,nabf->nab',q,k)
+        mask_inf = torch.zeros_like(mask,device=mask.device).float()
+        mask_inf[mask==0] = float('-inf')
+        if mask is not None:
+            atten = atten - mask_inf
+        atten = F.softmax(atten,dim=-1)
+        out = torch.einsum('nab,nabf->naf',atten,v)
+        return a + out
 
 class DynamicsCalculator(nn.Module):
 
@@ -259,7 +300,8 @@ class DynamicsCalculator(nn.Module):
             cutoff,
             cutoff_network,
             double_update_latent=True,
-            epsilon=1e-8
+            epsilon=1e-8,
+            nonlinear_attention = False,
     ):
         super(DynamicsCalculator, self).__init__()
 
@@ -299,6 +341,9 @@ class DynamicsCalculator(nn.Module):
             Dense(n_features, n_features, activation=activation),
             Dense(n_features, n_features, activation=None)
         )
+        self.nonlinear_attention = nonlinear_attention
+        if nonlinear_attention:
+            self.atten = NonLinearAttention(128,n_features)
 
         self.double_update_latent = double_update_latent
 
@@ -378,8 +423,11 @@ class DynamicsCalculator(nn.Module):
         msij = mij * ai_msij
 
         # update a with invariance
-        if self.double_update_latent:
-            a = a + self.sum_neighbors(msij, NM, dim=2)
+        if self.nonlinear_attention:
+            a = self.atten(a,aj_msij,NM,rbf_msij)
+        else:
+            if self.double_update_latent:
+                a = a + self.sum_neighbors(msij, NM, dim=2)
 
         # Dynamics: Forces
         # print('msij:', msij.shape, msij[0,0])
