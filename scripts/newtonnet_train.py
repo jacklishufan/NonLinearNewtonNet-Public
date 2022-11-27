@@ -7,13 +7,15 @@ import torch
 from torch.optim import Adam
 import yaml
 
+import sys
+sys.path.insert(0, r"C:\Users\Pumpkinfries\Desktop\Fa 22\CS 182\project\NewtonNet")
+
 from newtonnet.layers.activations import get_activation_by_string
 from newtonnet.models import NewtonNet
 
 from newtonnet.train import Trainer
-from newtonnet.data import parse_train_test
-from newtonnet.data import parse_ani_data
-from newtonnet.data import parse_methane_data
+from newtonnet.data import parse_train_test, parse_ani_data, parse_methane_data, parse_ani_ccx_data
+
 import wandb
 
 # torch.autograd.set_detect_anomaly(True)
@@ -41,10 +43,19 @@ parser.add_argument(
          "For all other data sets do not specify.")
 
 
+parser.add_argument(
+    '-k',
+    "--keys",
+    type=str,
+    required=False,
+    default='ccsd',
+    help="List of keys to point to requested data. Options are 'original', 'CHNO', 'ccsd', 'dipole'.")
+
 # define arguments
 args = parser.parse_args()
 config = args.config
 parser = args.parser
+data_keys = args.keys
 
 # settings
 settings_path = config
@@ -66,6 +77,11 @@ elif parser in ['ani']:
         settings, 'cpu')
     train_mode = 'energy'
     print('data set:', 'ANI')
+elif parser in ['ani_ccx']:
+    train_gen, val_gen, test_gen, tr_steps, val_steps, test_steps, n_train_data, n_val_data, n_test_data, normalizer, test_energy_hash = parse_ani_ccx_data(
+        settings, data_keys, 'cpu')
+    train_mode = 'energy'
+    print('data set:', 'ANI_CCX')
 elif parser in ['methane']:
     train_gen, val_gen, test_gen, tr_steps, val_steps, test_steps, n_train_data, n_val_data, n_test_data, normalizer, test_energy_hash = parse_methane_data(
         settings, device[0])
