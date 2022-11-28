@@ -924,6 +924,7 @@ def parse_md17_data(settings, data_keys, device):
     # atomic_Z_map = {'C': 6, 'H': 1, 'O': 8, 'N': 7}
     # atomic_self_energy = {'H': -0.60467592, 'C': -38.06846167, 'N': -54.70613008, 'O': -75.1796043 } # calculated from dataset
     atomic_self_energy = {1: -0.499946, 6: -37.786540, 7: -54.524824, 8: -74.993565 } # provided by Jiashu
+    atomic_self_energy_md17 = {1: -0.4986286936, 6: -37.7512363777, 7: -54.4665781763, 8: -74.9146696437 } # provided by Jiashu
     
     dtrain = {'R':[], 'Z':[], 'N':[], 'E':[]}
     dtest = {'R':[], 'Z':[], 'N':[], 'E':[]}
@@ -961,7 +962,7 @@ def parse_md17_data(settings, data_keys, device):
 
     md17_data = settings['data']['test_path']
     test_method = settings['data']['test_method']
-    molecule_dict_all = ['rmd17_aspirin', 'rmd17_azobenzene', 'rmd17_benzene', 'rmd17_ethanol'
+    molecule_dict_all = ['rmd17_aspirin', 'rmd17_azobenzene', 'rmd17_benzene', 'rmd17_ethanol', 
         'rmd17_malonaldehyde', 'rmd17_naphthalene', 'rmd17_paracetamol', 'rmd17_salicylic',
         'rmd17_toluene', 'rmd17_uracil']
     molecule_dict_in = ['rmd17_benzene', 'rmd17_ethanol', 'rmd17_malonaldehyde', 'rmd17_toluene', 'rmd17_uracil']
@@ -988,6 +989,11 @@ def parse_md17_data(settings, data_keys, device):
         for item in lst:
             molecule[item] = raw_file[item]
         
+        #subtract energy (in Kcal)
+        if settings['data']['subtract_self_energy']:
+            self_energy = np.sum([atomic_self_energy_md17[a] for a in molecule['nuclear_charges']])
+            molecule['energies'] -= self_energy * 627.2396
+
         n_conf, n_atoms, _ = molecule['coords'].shape
         conf_indices = np.arange(n_conf)
 
