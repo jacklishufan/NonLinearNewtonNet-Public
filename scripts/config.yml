@@ -1,6 +1,6 @@
 general:
   me: config.yml                                # path to this file
-  device: [cuda:0, cuda:1, cuda:2, cuda:3]      # cpu / cuda:0 / list of cuda
+  device: [cuda:0]      # cpu / cuda:0 / list of cuda
   driver: run.py                                # path to the run script
   output: [test , 1]                 # path and iterator for the output directory
 
@@ -27,11 +27,13 @@ model:
   max_z: 10                   # maximum atomic number in the chemical systems
   n_interactions: 3           # number of interaction blocks of newtonnet
   cutoff_network: poly        # the cutoff function: poly (polynomial), cosine
-  normalize_atomic: True     # if True the atomic energy needs to be inverse normalized, otherwise total energy will be scaled back
+  normalize_atomic: false     # if True the atomic energy needs to be inverse normalized, otherwise total energy will be scaled back
   shared_interactions: False  # if True parameters of interaction blocks will be shared.
   normalize_filter: False     #
   return_latent: True         # if True, the latent space will be returned for the future investigation
   double_update_latent: False #
+  attention_heads: 1
+  nonlinear_attention: on 
   layer_norm: False           # normalize hidden layer with a 1D layer_norm function
   aggregration: sum           # aggregration function to use if the prediction may not be represented as the sum of atomic components. 
                               # Options are: sum, mean, max
@@ -48,7 +50,7 @@ training:
   val_keep_original: True     #
   shuffle: True               # shuffle training data before each epoch
   drop_last: True             # if True, drop the left over data points that are less than a full batch size
-  lr: 1.0e-4                  # learning rate
+  lr: 1.0e-3                  # learning rate
   lr_scheduler: [plateau, 15, 30, 0.7, 1.0e-6]    # the learning rate decay based on the plateau algorithm: n_epoch_averaging, patience, decay_rate, stop_lr
 #  lr_scheduler: [decay, 0.05]                    # the learning rate decay based on exponential decay: the rate of decay
   weight_decay: 0             # the l2 norm
@@ -61,7 +63,7 @@ checkpoint:
   log: 1                      # log the results every this many epochs
   val: 1                      # evaluate the performance on the validation set every this many epochs
   test: 1                     # evaluate the performance on the test set every this many epochs
-  model: 100                  # save the model every this many epochs
+  model: 10000                  # save the model every this many epochs
   verbose: False              # verbosity of the logging
 
 
