@@ -104,6 +104,7 @@ class Trainer:
         self.mode = mode
         self.target_name = target_name
         self.force_latent = force_latent
+        self.last_test_epoch = 0
 
     def _handle_scheduler(self, lr_scheduler, optimizer):
 
@@ -333,8 +334,10 @@ class Trainer:
         fi = []
         AM = []
         RM = []  # rotation angles/matrix
-
-        for val_step in range(steps):
+        step_iter = range(steps)
+        if not self.verbose:
+            step_iter = tqdm(range(steps))
+        for val_step in step_iter:
             val_batch = next(generator)
 
             if self.hooks is not None and val_step == steps-1:
@@ -532,11 +535,22 @@ class Trainer:
         self._optimizer_to_device()
 
         running_val_loss = []
-        last_test_epoch = 0
+        self.last_test_epoch = 0
         for _ in range(epochs):
-            t0 = time.time()
+            self.train_one_epoch(steps,train_generator,clip_grad,epochs,val_generator,val_steps,irc_generator,irc_steps,test_generator,test_steps,running_val_loss)
 
-            # record total number of epochs so far
+    def log_statistics(self, n_train_data, n_val_data, n_test_data, normalizer, test_energy_hash):
+        with open(os.path.join(self.output_path, "stats.txt"), "w") as f:
+            f.write("Train data: %d\n" % n_train_data)
+            f.write("Val data: %d\n" % n_val_data)
+            f.write("Test data: %d\n" % n_test_data)
+            f.write("Normalizer: %s\n" % str(normalizer))
+            f.write("Test energy hash: %s\n" % test_energy_hash)
+
+    def train_one_epoch(self,steps,train_generator,clip_grad,epochs,val_generator,val_steps,irc_generator,irc_steps,test_generator,test_steps,running_val_loss):
+                # record total number of epochs so far
+            torch.cuda.empty_cache()
+            t0 = time.time()
             self.epoch += 1
 
             # loss force weight decay
@@ -570,6 +584,12 @@ class Trainer:
                 if clip_grad>0:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), clip_grad)
                 self.optimizer.step()
+                if (s %20 == 0 ):
+                    wandb.log(dict(
+                        epoch=self.epoch,
+                        mini_batch=s,
+                        loss_minibatch=loss.item(),
+                    ))
                 # if (s+1)%4==0 or s==steps-1:
                 #     self.optimizer.step()          # if in, comment out the one in the loop
                 #     self.optimizer.zero_grad()     # if in, comment out the one in the loop
@@ -697,7 +717,7 @@ class Trainer:
                     # np.save(os.path.join(self.val_out_path, 'irc_Ei_epoch%i'%self.epoch), outputs['Ei'])
 
                 # save test predictions
-                if test_generator is not None and self.epoch - last_test_epoch >= self.check_test:
+                if test_generator is not None and self.epoch - self.last_test_epoch >= self.check_test:
                     if self.mode in ["energy/force", "energy"]:
                         outputs = self.validation('test', test_generator, test_steps)
                         test_mae_E = np.mean(outputs['E_ae'])
@@ -714,7 +734,7 @@ class Trainer:
                         outputs = self.validation_atomic_properties('test', "CS", test_generator, test_steps)
                         torch.save(outputs, os.path.join(self.val_out_path, 'test_results.pkl'))
                         test_error = outputs["RMSE"]
-                    last_test_epoch = self.epoch
+                    self.last_test_epoch = self.epoch
                     # np.save(os.path.join(self.val_out_path, 'test_Ei_epoch%i'%self.epoch), outputs['Ei'])
 
             # learning rate decay
@@ -736,6 +756,7 @@ class Trainer:
                     old_lr = float(param_group["lr"])
 
                 if self.mode in ["energy/force", "energy"]:
+                    print("HERE")
                     self.store_checkpoint({
                         "loss(MSE)": running_loss,
                         'tr_E(MAE)': ae_energy,
@@ -758,11 +779,3 @@ class Trainer:
                         "lr": old_lr,
                         "time": time.time() - t0
                     }, steps)
-
-    def log_statistics(self, n_train_data, n_val_data, n_test_data, normalizer, test_energy_hash):
-        with open(os.path.join(self.output_path, "stats.txt"), "w") as f:
-            f.write("Train data: %d\n" % n_train_data)
-            f.write("Val data: %d\n" % n_val_data)
-            f.write("Test data: %d\n" % n_test_data)
-            f.write("Normalizer: %s\n" % str(normalizer))
-            f.write("Test energy hash: %s\n" % test_energy_hash)

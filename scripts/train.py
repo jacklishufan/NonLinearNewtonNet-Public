@@ -88,7 +88,7 @@ elif parser in ['ani']:
     print('data set:', 'ANI')
 elif parser in ['ani_ccx']:
     train_gen, val_gen, test_gen, tr_steps, val_steps, test_steps, n_train_data, n_val_data, n_test_data, normalizer, test_energy_hash = parse_ani_ccx_data(
-        settings, data_keys,  device[0])
+        settings, data_keys,  'cpu')
     train_mode = 'energy'
     print('data set:', 'ANI_CCX')
 elif parser in ['md17']:
@@ -126,6 +126,7 @@ model = NewtonNet(resolution=settings['model']['resolution'],
                requires_dr=settings['model']['requires_dr'],
                device=device[0],
                create_graph=True,
+               attention_heads=settings['model']['attention_heads'],
                shared_interactions=settings['model']['shared_interactions'],
                return_latent=settings['model']['return_latent'],
                double_update_latent=settings['model']['double_update_latent'],

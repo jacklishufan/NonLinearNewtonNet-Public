@@ -790,12 +790,14 @@ def parse_ani_ccx_data(settings, data_keys, device):
         dtrain['R'].extend(molecule['coordinates'][train_idx])
         dtrain['Z'].extend(np.tile([a for a in molecule['atomic_numbers']], (n_conf_train, 1)))
         dtrain['N'].extend([n_atoms] * n_conf_train)
+        dtrain['NA'].extend([n_atoms] * n_conf_train)
         dtrain['E'].extend(molecule[energy_type][train_idx])
         if test_data is False and test_size > 1:
             n_conf_test = len(test_idx) 
             dtest['R'].extend(molecule['coordinates'][test_idx])
             dtest['Z'].extend(np.tile([a for a in molecule['atomic_numbers']], (n_conf_test, 1)))
             dtest['N'].extend([n_atoms] * n_conf_test)
+            dtest['NA'].extend([n_atoms] * n_conf_test)
             dtest['E'].extend(molecule[energy_type][test_idx])
             
     if test_data:
@@ -814,6 +816,7 @@ def parse_ani_ccx_data(settings, data_keys, device):
             dtest['R'].extend(molecule['coordinates'])
             dtest['Z'].extend(np.tile([a for a in molecule['atomic_numbers']], (n_conf, 1)))
             dtest['N'].extend([n_atoms] * n_conf)
+            dtest['NA'].extend([n_atoms] * n_conf)
             dtest['E'].extend(molecule[energy_type])
 
     # Pad irregular-shaped arrays to make all arrays regular in size
@@ -954,6 +957,7 @@ def parse_md17_data(settings, data_keys, device):
         n_conf_train = len(train_idx)
         dtrain['R'].extend(molecule['coordinates'][train_idx])
         dtrain['Z'].extend(np.tile([a for a in molecule['atomic_numbers']], (n_conf_train, 1)))
+        #dtrain['NA'].extend([n_atoms] * n_conf_train)
         dtrain['N'].extend([n_atoms] * n_conf_train)
         dtrain['E'].extend(molecule[energy_type][train_idx])
 
@@ -1005,6 +1009,7 @@ def parse_md17_data(settings, data_keys, device):
         dtest['R'].extend(molecule['coords'][test_idx])
         dtest['Z'].extend(np.tile([a for a in molecule['nuclear_charges']], (n_conf_test, 1)))
         dtest['N'].extend([n_atoms] * n_conf_test)
+        #dtest['NA'].extend([n_atoms] * n_conf_test)
         dtest['E'].extend(molecule['energies'][test_idx])
 
     # Pad irregular-shaped arrays to make all arrays regular in size

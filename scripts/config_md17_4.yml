@@ -38,7 +38,7 @@ model:
   return_latent: off         # if True, the latent space will be returned for the future investigation
   double_update_latent: False #
   nonlinear_attention: on 
-  attention_heads: 32
+  attention_heads: 16
   layer_norm: true           # normalize hidden layer with a 1D layer_norm function
   aggregration: sum           # aggregration function to use if the prediction may not be represented as the sum of atomic components. 
                               # Options are: sum, mean, max
