@@ -63,7 +63,8 @@ class NewtonNet(nn.Module):
                  pbc=False,
                  aggregration='sum',
                  attention_heads=1,
-                 nonlinear_attention=False):
+                 nonlinear_attention=False,
+                 three_body=False):
 
         super(NewtonNet, self).__init__()
 
@@ -102,6 +103,7 @@ class NewtonNet(nn.Module):
                         double_update_latent=double_update_latent,
                         nonlinear_attention = nonlinear_attention,
                         attention_heads=attention_heads,
+                        three_body=three_body
                     )
                 ]
                 * n_interactions
@@ -297,9 +299,43 @@ class NonLinearAttention(nn.Module):
             atten = atten + mask_inf.unsqueeze(-1) # n a b n_heads
         atten = F.softmax(atten,dim=-2) # n a b n_heads
         v = v.view(n,a,b,n_heads,f//n_heads)
-        out = torch.einsum('nabh,nabhf->nahf',atten,v).reshape(*aa.shape)
+        out = torch.einsum('nabh,nabhf->nahf',atten,v).view(*aa.shape)
         return aa + out
 
+class NonLinearAttentionThreeBody(nn.Module):
+
+    def __init__(self,d_model,feature_dim,n_heads=1):
+        super().__init__()
+        self.q = MLP(feature_dim,d_model*2,d_model)
+        self.k = MLP(feature_dim,d_model*2,d_model)
+        self.v = MLP(feature_dim*2,feature_dim*2,feature_dim)
+        self.n_heads = n_heads
+
+    def forward(self,a,b,mask=None,rbf_msij=None):
+        '''
+        a: N X A X nf
+        b: N X A X n(eighbor) X nf
+        '''
+        aa = a
+        q = self.q(a)
+        k = self.k(b)
+        v = self.v(torch.cat([b,rbf_msij],dim=-1)) # n x a x nf
+        atten = torch.einsum('naf,nabf->nabf',q,k)
+        n,a,b,f = atten.shape
+        n_heads = self.n_heads
+        atten = atten.view(n,a,b,n_heads,f//n_heads)
+        atten = atten.sum(-1) # n a b n_heads
+        mask_inf = torch.zeros_like(mask,device=mask.device).float()
+        mask_inf[mask==0] = -1e5
+        if mask is not None:
+            atten = atten + mask_inf.unsqueeze(-1) # n a b n_heads
+        atten = torch.einsum('nabf,nacf->nabcf',atten,atten)
+        nn,aa,bb,cc,hh = atten.shape
+        atten = F.softmax(atten.view(nn,aa,bb*cc,hh),dim=-2) # n a (b * c) n_heads
+        v = v.view(n,a,b,n_heads,f//n_heads)
+        v = torch.einsum('nabhf,nachf->nabchf',v,v).view(nn,aa,bb*cc,hh,-1)
+        out = torch.einsum('nabh,nabhf->nahf',atten,v).view(*aa.shape)
+        return aa + out 
 class DynamicsCalculator(nn.Module):
 
     def __init__(
@@ -313,12 +349,13 @@ class DynamicsCalculator(nn.Module):
             epsilon=1e-8,
             nonlinear_attention = False,
             attention_heads = 1,
+            three_body=False,
     ):
         super(DynamicsCalculator, self).__init__()
 
         self.n_features = n_features
         self.epsilon = epsilon
-
+        self.three_body = three_body
         # non-directional message passing
         self.phi_rbf = Dense(resolution, n_features, activation=None)
 
@@ -354,6 +391,8 @@ class DynamicsCalculator(nn.Module):
         )
         self.nonlinear_attention = nonlinear_attention
         if nonlinear_attention:
+            if self.three_body:
+                self.atten = NonLinearAttentionThreeBody(128,n_features,attention_heads)
             self.atten = NonLinearAttention(128,n_features,attention_heads)
 
         self.double_update_latent = double_update_latent

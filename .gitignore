@@ -12,6 +12,7 @@ local
 .idea/
 scripts/wandb
 scripts/local
+scripts/test/
 
 # Distribution / packaging
 .Python

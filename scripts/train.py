@@ -132,6 +132,7 @@ model = NewtonNet(resolution=settings['model']['resolution'],
                double_update_latent=settings['model']['double_update_latent'],
                layer_norm=settings['model']['layer_norm'],
                nonlinear_attention=settings['model']['nonlinear_attention'],
+               three_body=settings['model'].get('three_body',False)
                )
 
 # laod pre-trained model

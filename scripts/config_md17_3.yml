@@ -65,9 +65,9 @@ hooks:
   vismolvector3d: False       # if the latent force vectors need to be visualized (only works when the return_latent is on)
 
 checkpoint:
-  log: 1                     # log the results every this many epochs
+  log: 5                     # log the results every this many epochs
   val: 5                      # evaluate the performance on the validation set every this many epochs
-  test: 100                     # evaluate the performance on the test set every this many epochs
+  test: 9999                     # evaluate the performance on the test set every this many epochs
   model: 100                  # save the model every this many epochs
   verbose: False              # verbosity of the logging
 
