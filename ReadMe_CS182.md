@@ -1,13 +1,14 @@
-# Readme #
+# Non-Linear Graph Attention for Molecular Energy Prediction #
 
 ## Overview ##
 
-CS 182 Final Project Fall 2022
+CS 182 Final Project Fall 2022 at University of California, Berkeley
 
-Authors: Jiahsu Liang, Divyam Goel, Yifan Zhang, and Shufan Li
+Authors: Jiahsu Liang1, Shufan Li1, Yifan Zhang1, and Divyam Goel
 
-Summary: Real world atomistic dynamics are dictated by complex quantum mechanical interactions. NewtonNet, a Newtonian message passing network for deep learning of interatomic potentials and forces, has been proven to reduce such computational complexity. 
-In this project, we will be applying deep neural network approach to the field of quantum chemistry. Specifically, we will be expanding the existing model, NewtonNet, to aim to achieve better prediction results on molecule energies for popular dataset such as Ani-ccx and MD-17 by combining latent force computations with three body angular interactions and 4 body di-headral interactions using nonlinear attention from Equiformer [this one may be changed depends on demand].  
+Summary: Real world atomistic dynamics are dictated by complex quantum mechanical interactions. NewtonNet, a Newtonian message passing network for deep learning of interatomic potentials and forces, has been proven to reduce such computational complexity.
+In this project, we will be applying a deep neural network approach to the field of quantum chemistry. Specifically, we will be expanding the existing model, NewtonNet, to aim to achieve better prediction results on molecular energies for popular dataset such as Ani-ccx and MD-17 by combining latent force computations with three body angular interactions and 4 body di-headral interactions using nonlinear attention from Equiformer [this one may be changed depends on demand].  
+ 
 
 ## Installation and Dependencies ##
 
@@ -36,6 +37,16 @@ anywhere on your computer as long as the `newtonnet` environment is activated.
 
 ## Getting Started
 
+Download datasets from following websites:
+
+Ani-1 data set: https://figshare.com/collections/_/3846712
+
+Ani-ccx data set: https://springernature.figshare.com/collections/The_ANI-1ccx_and_ANI-1x_data_sets_coupled-cluster_and_density_functional_theory_properties_for_molecules/4712477
+
+MD 17 data set: https://figshare.com/articles/dataset/Revised_MD17_dataset_rMD17_/12672038
+
+Set `root` to the path to your local data for in `config_ani.yml`
+
 To launch experiments with multiple GPUs:
 
 set `CUDA_VISIBLE_DEVICES=4,5,6,7` or your GPU device numbers in `config_ani.yml`
@@ -46,41 +57,39 @@ python train.py -c config_ani.yml -p ani
 To launch experiments with one GPU:
 
 set `CUDA_VISIBLE_DEVICES=0` in `config_ani.yml`
-```
+```  
 python train.py -c config_ani.yml -p ani
 ```
 
 Note: you can run the model after editing `config_ani.yml`  (`device: ` should be set to the actual number of gpus you have locally)
 
 
-## Guidlines [TODO]
+## Guidlines 
 
-To run Ani-CCX data,
+- You can find several run files inside the scripts directory that rely on the implemented modules in the NewtonNet library. 
 
-python train.py -c config_aniccx.yml -p ani_ccx -k ccsd
+- The run scripts need to be accompanied with a yaml configuration file where you can adjust hyperparameters such as batch size.
+
+- The documentation of the modules are available at most cases. Please look up local classes or functions
+and consult with the docstrings in the code.
+
+- You can specify which dataset adn dataloader you want to use by changing parse arguments. They can be found in train.py.
 
 
 ## Codebase Strctures ##
 ```
 ├──  cli
 │    └── newtonnet_train.py  - command line interface for the training
-| 
-│
-├──  data  [TODO]
-│    └── datasets  - here's the datasets folder that is responsible for all data handling.
-│    └── transforms  - here's the data preprocess folder that is responsible for all data augmentation.
-│    └── build.py  		   - here's the file to make dataloader.
-│    └── collate_batch.py   - here's the file that is responsible for merges a list of samples to form a mini-batch.
 │
 │
-├──  newtonnet              - this folder contains the model
-│   └── data                - this folder contains the data loader.
+├──  newtonnet                                  - this folder contains the model
+│   └── data                                    - this folder contains the data loader.
 │       └── __init__.py    
 │       └── loader.py   
 │       └── neighbors.py   
 │       └── parse_raw.py    
 │       └── pyanitools.py    
-│   └── layers                - this file contains the layers used by the model.
+│   └── layers                                  - this folder contains the layers used by the model.
 │       └── __init__.py    
 │       └── activations.py   
 │       └── batchrenorm.py   
@@ -89,36 +98,32 @@ python train.py -c config_aniccx.yml -p ani_ccx -k ccsd
 │       └── representations.py   
 │       └── scalers.py    
 │       └── shells.py   
-│   └── mdoels                - this file contains the train loops.
+│   └── mdoels                                  - this folder contains the model itself
 │       └── __init__.py    
 │       └── newtonnet.py   
-│       └── batchrenorm.py   
-│       └── cutoff.py    
-│       └── dense.py   
-│       └── representations.py   
-│       └── scalers.py    
-│       └── shells.py   
-│   └── trains                - this folder contains the train loops.
+|
+| 
+│   └── trains                                  - this folder contains the train loops.
 │       └── hooks
 │           └── __init__.py
 │           └── visualizers.py
 │       └── __init__.py   
 │       └── trainer.py  
-│   └── utils                - this folder contains the utilies used by the model.
+│   └── utils                                   - this folder contains the utilies used by the model.
 │       └── __init__.py    
 │       └── utility.py   
 |
 |
 ├──  scripts  
-│    └── config.yml             - here's the datasets folder that is responsible for all data handling.
-│    └── config_ani.yml         - here's the data preprocess folder that is responsible for all data augmentation.
-│    └── config_aniccx.yml  		   - here's the file to make dataloader.
-│    └── config_aniccx_nonlinear_atten.yml      - here's the file 
-│    └── config_aniccx_test.yml             - here's the datasets folder that is responsible for all data handling.
-│    └── config_md17.yml            - here's the data preprocess folder that is responsible for all data augmentation.
-│    └── launch.sh       		   - here's the file to make dataloader.
-│    └── run.py                 - here's the file 
-│    └── train.py               - here's the file 
+│    └── config.yml                             - here's the default config file from THG Lab.
+│    └── config_ani.yml                         - here's the config file to run with ani-1 data.
+│    └── config_aniccx.yml  		            - here's the config file to run with ani-ccx data.
+│    └── config_aniccx_nonlinear_atten.yml      - here's the config file to run with ani-ccx data with non-linear attention.
+│    └── config_aniccx_test.yml                 - here's the config file to run with ani-ccx data. [???]
+│    └── config_md17.yml                        - here's the config file to run with MD 17 data.
+│    └── launch.sh       		                
+│    └── run.py                                  
+│    └── train.py                               - here's the script to start training
 ```
 
 ## License ##
