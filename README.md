@@ -4,7 +4,7 @@
 
 CS 182 Final Project Fall 2022 at University of California, Berkeley
 
-Authors: Jiahsu Liang1, Shufan Li1, Yifan Zhang1, and Divyam Goel
+Authors: Jiahsu Liang, Shufan Li, Yifan Zhang, and Divyam Goel
 
 Summary: Real world atomistic dynamics are dictated by complex quantum mechanical interactions. NewtonNet, a Newtonian message passing network for deep learning of interatomic potentials and forces, has been proven to reduce such computational complexity.
 In this project, we will be applying a deep neural network approach to the field of quantum chemistry. Specifically, we will be expanding the existing model, NewtonNet, to aim to achieve better prediction results on molecular energies for popular dataset such as Ani-ccx and MD-17 by combining latent force computations with three body angular interactions and 4 body di-headral interactions using nonlinear attention from Equiformer [this one may be changed depends on demand].  
