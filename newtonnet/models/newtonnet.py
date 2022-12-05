@@ -302,6 +302,38 @@ class NonLinearAttention(nn.Module):
         out = torch.einsum('nabh,nabhf->nahf',atten,v).view(*aa.shape)
         return aa + out
 
+class LinearAttention(nn.Module):
+
+    def __init__(self,d_model,feature_dim,n_heads=1):
+        super().__init__()
+        self.q = nn.Linear(feature_dim,d_model)
+        self.k = nn.Linear(feature_dim,d_model)
+        self.v = nn.Linear(feature_dim*2,feature_dim*2,feature_dim)
+        self.n_heads = n_heads
+
+    def forward(self,a,b,mask=None,rbf_msij=None):
+        '''
+        a: N X A X nf
+        b: N X A X n(eighbor) X nf
+        '''
+        aa = a
+        q = self.q(a)
+        k = self.k(b)
+        v = self.v(torch.cat([b,rbf_msij],dim=-1)) # n x a x nf
+        atten = torch.einsum('naf,nabf->nabf',q,k)
+        n,a,b,f = atten.shape
+        n_heads = self.n_heads
+        atten = atten.view(n,a,b,n_heads,f//n_heads)
+        atten = atten.sum(-1) # n a b n_heads
+        mask_inf = torch.zeros_like(mask,device=mask.device).float()
+        mask_inf[mask==0] = -1e5
+        if mask is not None:
+            atten = atten + mask_inf.unsqueeze(-1) # n a b n_heads
+        atten = F.softmax(atten,dim=-2) # n a b n_heads
+        v = v.view(n,a,b,n_heads,f//n_heads)
+        out = torch.einsum('nabh,nabhf->nahf',atten,v).view(*aa.shape)
+        return aa + out
+
 class NonLinearAttentionThreeBody(nn.Module):
 
     def __init__(self,d_model,feature_dim,n_heads=1):
@@ -391,9 +423,12 @@ class DynamicsCalculator(nn.Module):
         )
         self.nonlinear_attention = nonlinear_attention
         if nonlinear_attention:
-            if self.three_body:
+            if nonlinear_attention == '':
+                self.atten = LinearAttention(128,n_features,attention_heads)
+            elif self.three_body:
                 self.atten = NonLinearAttentionThreeBody(128,n_features,attention_heads)
-            self.atten = NonLinearAttention(128,n_features,attention_heads)
+            else:
+                self.atten = NonLinearAttention(128,n_features,attention_heads)
 
         self.double_update_latent = double_update_latent
 
