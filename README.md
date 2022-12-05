@@ -76,7 +76,7 @@ and consult with the docstrings in the code.
 - You can specify which dataset adn dataloader you want to use by changing parse arguments. They can be found in train.py.
 
 
-## Codebase Strctures ##
+## Codebase Strctures (Inheritated from NewtonNet Project) ##
 ```
 ├──  cli
 │    └── newtonnet_train.py  - command line interface for the training
@@ -151,18 +151,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-## Future Work ##
-
-TBD
-
-
 ## Contributing
 Any kind of enhancement or contribution is welcomed.
 
 
 ## Acknowledgments
 
-We're grateful for the help provided by [XXX], who are the authors of NewtonNet paper and THG Lab at Berkeley.
-We're also grateful for the computing resources provided by Berkeley Artifical Intelligence Reserach and NERSC. 
+We're grateful for the help provided by the original authors of NewtonNet paper from University of California, Berkeley. 
 
 
