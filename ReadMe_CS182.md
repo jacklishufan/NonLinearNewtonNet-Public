@@ -36,19 +36,22 @@ anywhere on your computer as long as the `newtonnet` environment is activated.
 
 ## Getting Started
 
-To launch experiments, use 
+To launch experiments with multiple GPUs, 
+set CUDA_VISIBLE_DEVICES=4,5,6,7 or your GPU device numbers in config_ani.yml
 ```
-CUDA_VISIBLE_DEVICES=4,5,6,7 python train.py -c config_ani.yml -p ani
-```
-
-To try locally (likely to get OOM error), run
-
-```
-CUDA_VISIBLE_DEVICES=0 python train.py -c config_ani.yml -p ani
+python train.py -c config_ani.yml -p ani
 ```
 
-after editing `config_ani.yml`  (`device: ` should be set to the actual number of gpus you have locally)
+To launch experiments with one GPU,
+set CUDA_VISIBLE_DEVICES=0 in config_ani.yml
+```
+python train.py -c config_ani.yml -p ani
+```
 
+Note: you can run the model after editing `config_ani.yml`  (`device: ` should be set to the actual number of gpus you have locally)
+
+
+## Guidlines
 
 To run Ani-CCX data,
 
