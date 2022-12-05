@@ -53,7 +53,7 @@ python train.py -c config_ani.yml -p ani
 Note: you can run the model after editing `config_ani.yml`  (`device: ` should be set to the actual number of gpus you have locally)
 
 
-## Guidlines
+## Guidlines [TODO]
 
 To run Ani-CCX data,
 
@@ -64,13 +64,9 @@ python train.py -c config_aniccx.yml -p ani_ccx -k ccsd
 ```
 ├──  cli
 │    └── newtonnet_train.py  - command line interface for the training
+| 
 │
-│
-├──  configs  
-│    └── train_mnist_softmax.yml  - here's the specific config file for specific model or dataset.
-│ 
-│
-├──  data  
+├──  data  [TODO]
 │    └── datasets  - here's the datasets folder that is responsible for all data handling.
 │    └── transforms  - here's the data preprocess folder that is responsible for all data augmentation.
 │    └── build.py  		   - here's the file to make dataloader.
