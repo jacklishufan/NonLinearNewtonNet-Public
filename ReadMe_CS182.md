@@ -38,14 +38,14 @@ anywhere on your computer as long as the `newtonnet` environment is activated.
 
 To launch experiments with multiple GPUs:
 
-set CUDA_VISIBLE_DEVICES=4,5,6,7 or your GPU device numbers in config_ani.yml
+set `CUDA_VISIBLE_DEVICES=4,5,6,7` or your GPU device numbers in `config_ani.yml`
 ```
 python train.py -c config_ani.yml -p ani
 ```
 
 To launch experiments with one GPU:
 
-set CUDA_VISIBLE_DEVICES=0 in config_ani.yml
+set `CUDA_VISIBLE_DEVICES=0` in `config_ani.yml`
 ```
 python train.py -c config_ani.yml -p ani
 ```
