@@ -308,7 +308,7 @@ class LinearAttention(nn.Module):
         super().__init__()
         self.q = nn.Linear(feature_dim,d_model)
         self.k = nn.Linear(feature_dim,d_model)
-        self.v = nn.Linear(feature_dim*2,feature_dim*2,feature_dim)
+        self.v = nn.Linear(feature_dim*2,feature_dim)
         self.n_heads = n_heads
 
     def forward(self,a,b,mask=None,rbf_msij=None):
@@ -423,7 +423,7 @@ class DynamicsCalculator(nn.Module):
         )
         self.nonlinear_attention = nonlinear_attention
         if nonlinear_attention:
-            if nonlinear_attention == '':
+            if nonlinear_attention == 'linear':
                 self.atten = LinearAttention(128,n_features,attention_heads)
             elif self.three_body:
                 self.atten = NonLinearAttentionThreeBody(128,n_features,attention_heads)
