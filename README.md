@@ -7,7 +7,7 @@ CS 182 Final Project Fall 2022 at University of California, Berkeley
 Authors: Jiahsu Liang, Shufan Li, Yifan Zhang, and Divyam Goel
 
 Summary: Real world atomistic dynamics are dictated by complex quantum mechanical interactions. NewtonNet, a Newtonian message passing network for deep learning of interatomic potentials and forces, has been proven to reduce such computational complexity.
-In this project, we will be applying a deep neural network approach to the field of quantum chemistry. Specifically, we will be expanding the existing model, NewtonNet, to aim to achieve better prediction results on molecular energies for popular dataset such as Ani-ccx and MD-17 by combining latent force computations with three body angular interactions and 4 body di-headral interactions using nonlinear attention from Equiformer [this one may be changed depends on demand].  
+In this project, we will be applying a deep neural network approach to the field of quantum chemistry. Specifically, we will be expanding the existing model, NewtonNet, to aim to achieve better prediction results on molecular energies for popular datasets such as Ani-ccx and MD-17 by combining latent force computations with three-body angular interactions using nonlinear attention from Equiformer.
  
 
 ## Installation and Dependencies ##
@@ -43,20 +43,20 @@ Ani-1 data set: https://figshare.com/collections/_/3846712
 
 Ani-ccx data set: https://springernature.figshare.com/collections/The_ANI-1ccx_and_ANI-1x_data_sets_coupled-cluster_and_density_functional_theory_properties_for_molecules/4712477
 
-MD 17 data set: https://figshare.com/articles/dataset/Revised_MD17_dataset_rMD17_/12672038
+MD-17 data set: https://figshare.com/articles/dataset/Revised_MD17_dataset_rMD17_/12672038
 
-Set `root` to the path to your local data for in `config_ani.yml`
+Set `root` to the path to your local data folder in `config_ani.yml`
 
 To launch experiments with multiple GPUs:
 
-set `CUDA_VISIBLE_DEVICES=4,5,6,7` or your GPU device numbers in `config_ani.yml`
+Set `CUDA_VISIBLE_DEVICES=4,5,6,7` or your GPU device numbers in `config_ani.yml`
 ```
 python train.py -c config_ani.yml -p ani
 ```
 
 To launch experiments with one GPU:
 
-set `CUDA_VISIBLE_DEVICES=0` in `config_ani.yml`
+Set `CUDA_VISIBLE_DEVICES=0` in `config_ani.yml`
 ```  
 python train.py -c config_ani.yml -p ani
 ```
@@ -64,7 +64,7 @@ python train.py -c config_ani.yml -p ani
 Note: you can run the model after editing `config_ani.yml`  (`device: ` should be set to the actual number of gpus you have locally)
 
 
-## Guidlines 
+## Guidelines 
 
 - You can find several run files inside the scripts directory that rely on the implemented modules in the NewtonNet library. 
 
@@ -73,23 +73,23 @@ Note: you can run the model after editing `config_ani.yml`  (`device: ` should b
 - The documentation of the modules are available at most cases. Please look up local classes or functions
 and consult with the docstrings in the code.
 
-- You can specify which dataset adn dataloader you want to use by changing parse arguments. They can be found in train.py.
+- You can specify which dataset and dataloader you want to use by changing parse arguments. They can be found in train.py.
 
 
-## Codebase Strctures (Inheritated from NewtonNet Project) ##
+## Codebase Strctures (Inherited from Original NewtonNet Project) ##
 ```
 ├──  cli
-│    └── newtonnet_train.py  - command line interface for the training
+│    └── newtonnet_train.py                     - command line interface for the training
 │
 │
-├──  newtonnet                                  - this folder contains the model
+├──  newtonnet                                  - this folder contains the model architecture. 
 │   └── data                                    - this folder contains the data loader.
 │       └── __init__.py    
 │       └── loader.py   
 │       └── neighbors.py   
-│       └── parse_raw.py    
+│       └── parse_raw.py                        - this file contains our implementation of custom data loader classes.
 │       └── pyanitools.py    
-│   └── layers                                  - this folder contains the layers used by the model.
+│   └── layers                                  - this folder contains the layers and transformations used by the model.
 │       └── __init__.py    
 │       └── activations.py   
 │       └── batchrenorm.py   
@@ -100,9 +100,7 @@ and consult with the docstrings in the code.
 │       └── shells.py   
 │   └── mdoels                                  - this folder contains the model itself
 │       └── __init__.py    
-│       └── newtonnet.py   
-|
-| 
+│       └── newtonnet.py                        - this files contains our implementation of non-linear attention and three-body update layer
 │   └── trains                                  - this folder contains the train loops.
 │       └── hooks
 │           └── __init__.py
@@ -152,11 +150,12 @@ SOFTWARE.
 
 
 ## Contributing
+
 Any kind of enhancement or contribution is welcomed.
 
 
 ## Acknowledgments
 
-We're grateful for the help provided by the original authors of NewtonNet paper from University of California, Berkeley. 
+We're grateful for the help provided by the original authors of NewtonNet paper from THG Lab at University of California, Berkeley. 
 
 
