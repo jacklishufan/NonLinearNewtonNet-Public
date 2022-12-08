@@ -75,8 +75,47 @@ and consult with the docstrings in the code.
 
 - You can specify which dataset and dataloader you want to use by changing parse arguments. They can be found in train.py.
 
+## Changes from NewtonNet Codebase.
+1. We implement three class in `newtonnet/models/newtonnet.py`: `NonLinearAttention`,`LinearAttention` and `NonLinearAttentionThreeBody`.
 
-## Codebase Strctures (Inherited from Original NewtonNet Project) ##
+2. We implement dataloaders in `newtonnet/data/parse_raw.py` for ANI-1ccx and RMD17 dataset with ccsd energy. 
+
+3. We update the config sturcture in `scripts/config_NaN.yml`. In particular, we added following keys:
+```
+  nonlinear_attention: on     # wheather to add nonlinear attention
+  attention_heads: 32       # number of heads
+  three_body: on             # wheather to enable three-body interaction
+```
+
+To reproduce ablation result of Linear attention, please set the following 
+```
+  nonlinear_attention: linear    
+  attention_heads: 32      
+  three_body: off  
+```
+
+To reproduce our three body method, use 
+```
+  nonlinear_attention: on    
+  attention_heads: 32      
+  three_body: on  
+```
+
+To reproduce our two body method, use 
+```
+  nonlinear_attention: on    
+  attention_heads: 32      
+  three_body: off
+```
+
+To reproduce baseline NewtonNet, use 
+```
+  nonlinear_attention: off    
+  attention_heads: 1 
+  three_body: off
+```
+
+## Full Codebase Strctures (Inherited from Original NewtonNet Project) ##
 ```
 ├──  cli
 │    └── newtonnet_train.py                     - command line interface for the training
@@ -113,12 +152,8 @@ and consult with the docstrings in the code.
 |
 |
 ├──  scripts  
-│    └── config.yml                             - here's the default config file from THG Lab.
-│    └── config_ani.yml                         - here's the config file to run with ani-1 data.
-│    └── config_aniccx.yml  		            - here's the config file to run with ani-ccx data.
-│    └── config_aniccx_nonlinear_atten.yml      - here's the config file to run with ani-ccx data with non-linear attention.
-│    └── config_aniccx_test.yml                 - here's the config file to run with ani-ccx data. [???]
-│    └── config_md17.yml                        - here's the config file to run with MD 17 data.
+│    └── config_NaN.yml                             - here's config file for our method
+│    └── config_NewtonNet.yml                         - config file for vanilla NewtonNet
 │    └── launch.sh       		                
 │    └── run.py                                  
 │    └── train.py                               - here's the script to start training

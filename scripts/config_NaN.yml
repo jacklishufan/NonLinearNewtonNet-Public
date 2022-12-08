@@ -2,11 +2,11 @@ general:
   me: config.yml                                # path to this file
   device: [cuda:0,cuda:1,cuda:2,cuda:3]      # cpu / cuda:0 / list of cuda
   driver: train.py   # path to the run script
-  output: [local/ccsd/test , 1]                 # path and iterator for the output directory
+  output: [log/test , 1]                 # path and iterator for the output directory
 
 data:
-  train_path: /shared/jacklishufan/ani-1-cxx
-  test_path: /shared/jacklishufan/rmd17/npz_data
+  train_path: data/ani-1-cxx #ANI1-CCX data path
+  test_path: data/npz_data # MD 17 data path
   test_method: "all" # other options are 'out' and 'in', corresponding to in-distribution and out-distribution
   test_size_per_molecule: 0.25
   subtract_self_energy: on 
@@ -37,9 +37,9 @@ model:
   normalize_filter: on     #
   return_latent: off         # if True, the latent space will be returned for the future investigation
   double_update_latent: False #
-  nonlinear_attention: linear 
-  attention_heads: 32
-  three_body: off
+  nonlinear_attention: on     # wheather to add nonlinear attention
+  attention_heads: 32       # number of heads
+  three_body: on             # wheather to enable three-body interaction
   layer_norm: true           # normalize hidden layer with a 1D layer_norm function
   aggregration: sum           # aggregration function to use if the prediction may not be represented as the sum of atomic components. 
                               # Options are: sum, mean, max
