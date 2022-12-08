@@ -43,25 +43,25 @@ Ani-1 data set: https://figshare.com/collections/_/3846712
 
 Ani-ccx data set: https://springernature.figshare.com/collections/The_ANI-1ccx_and_ANI-1x_data_sets_coupled-cluster_and_density_functional_theory_properties_for_molecules/4712477
 
-MD-17 data set: https://figshare.com/articles/dataset/Revised_MD17_dataset_rMD17_/12672038
+MD17 data set: https://paperswithcode.com/dataset/md17
 
-Set `root` to the path to your local data folder in `config_ani.yml`
+Set `train_path` and `test_path` to paths to your local data folders in `config_NaN.yml`
 
 To launch experiments with multiple GPUs:
 
-Set `CUDA_VISIBLE_DEVICES=4,5,6,7` or your GPU device numbers in `config_ani.yml`
+Set `CUDA_VISIBLE_DEVICES=4,5,6,7` or your GPU device numbers in `config_NaN.yml`
 ```
-python train.py -c config_ani.yml -p ani
+python train.py -c config_NaN.yml -p ani
 ```
 
 To launch experiments with one GPU:
 
-Set `CUDA_VISIBLE_DEVICES=0` in `config_ani.yml`
+Set `CUDA_VISIBLE_DEVICES=0` in `config_NaN.yml`
 ```  
-python train.py -c config_ani.yml -p ani
+python train.py -c config_NaN.yml -p ani
 ```
 
-Note: you can run the model after editing `config_ani.yml`  (`device: ` should be set to the actual number of gpus you have locally)
+Note: you can run the model after editing `config_NaN.yml`  (`device: ` should be set to the actual number of gpus you have locally)
 
 
 ## Guidelines 
@@ -78,7 +78,7 @@ and consult with the docstrings in the code.
 ## Changes from NewtonNet Codebase.
 1. We implement three class in `newtonnet/models/newtonnet.py`: `NonLinearAttention`,`LinearAttention` and `NonLinearAttentionThreeBody`.
 
-2. We implement dataloaders in `newtonnet/data/parse_raw.py` for ANI-1ccx and RMD17 dataset with ccsd energy. 
+2. We implement dataloaders in `newtonnet/data/parse_raw.py` for ANI-1ccx and MD17 dataset with ccsd energy. 
 
 3. We update the config sturcture in `scripts/config_NaN.yml`. In particular, we added following keys:
 ```
@@ -152,8 +152,8 @@ To reproduce baseline NewtonNet, use
 |
 |
 ├──  scripts  
-│    └── config_NaN.yml                             - here's config file for our method
-│    └── config_NewtonNet.yml                         - config file for vanilla NewtonNet
+│    └── config_NaN.yml                         - here's config file for our method
+│    └── config_NewtonNet.yml                   - config file for vanilla NewtonNet
 │    └── launch.sh       		                
 │    └── run.py                                  
 │    └── train.py                               - here's the script to start training
