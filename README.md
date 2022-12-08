@@ -25,7 +25,7 @@ provided on the official website: https://pytorch.org/get-started/locally/
 
 Now, you can install NewtonNet in the conda environment by cloning this repository:
 
-    git@github.com:jacklishufan/NewtonNet.git
+    git@github.com:jacklishufan/NonLinearNewtonNet-Public.git
 
 and then runnig the following command inside the NewtonNet repository (where you have access to setup.py):
 
